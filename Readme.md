@@ -7,7 +7,7 @@ For very simple functions, the optimizer can be used with a single population. B
 
 The crossover between best individuals is performed in a manner that genes of random best different individuals are averaged to create the next generation. In this algorithm, the best fitness half of the population survives to the next generation.
 
-The mutations are randomly two distributions can be selected: uniform over the whole domain, or normal centered at the best individual in a tribe with a user provided standard deviation. The uniform model is slower convergent, but avoid local minima by itself (with a very large number of generations!). The normal model combined with the tribe concept, achieves to very good results with considerably less fitnes evaluations of the fitness function. 
+The mutations are randomly two distributions can be selected: uniform over the whole domain, or normal centered at the best individual in a tribe with a user provided standard deviation. The uniform model is slower convergent, but avoid local minima by itself (with a very large number of generations!). The normal model combined with the tribe concept, achieves to very good results with considerably less evaluations of the fitness function. 
 
 
 This is a enumeration
