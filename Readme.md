@@ -1,3 +1,4 @@
+Under construction....
 Genetic algorithm - based Optimizer 
 ==================================
 
@@ -9,7 +10,7 @@ The crossover between best individuals is performed in a manner that genes of ra
 
 The mutations are randomly two distributions can be selected: uniform over the whole domain, or normal centered at the best individual in a tribe with a user provided standard deviation. The uniform model is slower convergent, but avoid local minima by itself (with a very large number of generations!). The normal model combined with the tribe concept, achieves to very good results with considerably less evaluations of the fitness function. 
 
-
+###
 This is a enumeration
 1. one
 1. two
@@ -31,3 +32,4 @@ def kk():
 ```
 This is a link: 
 [youtbe](www.youtube.com)
+###
