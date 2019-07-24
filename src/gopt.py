@@ -43,6 +43,8 @@ class gopt:
 			muted = mutator(self.lb, self.ub, size = (bad_sons.shape[0], self.n_arg)) 
 		else: 
 			muted = mutator( sons[0], self.width_mut, size = (bad_sons.shape[0], self.n_arg))
+			muted = np.minimum(self.ub,muted)
+			muted = np.maximum(self.lb,muted)
 	
 		nidx = [ i for i in range(bad_sons.shape[0]) if i not in mut_idx ]
 		muted[ nidx, :] = 0
@@ -52,93 +54,52 @@ class gopt:
 
 		fit_table = np.hstack( ( fit_table[ :self.npop // 2 ], new_table) )
 		sons = np.vstack(([sons, bad_sons])) 
-		idx = np.argsort(fit_table)	
+		idx = np.argsort(fit_table)
 		return sons[idx], fit_table[idx]
-		
+
 
 	def run_tribus(self):
 		assert(self.model in [ 'uniform', 'normal' ]), "Select a valid mutation model: uniform, normal"
 		mutator = np.random.normal
 		if self.model == 'uniform':
 			mutator = np.random.uniform
-
 		for steps in range(self.g_tr): 
 			for tr in range(self.tribus): 
 				self.adan_eva[tr], self.fit_table[tr] = self.evolve_one_step( self.adan_eva[tr][:], self.fit_table[tr], mutator )
 	
-		
+		self.sons = self.adan_eva
+
 	def run_merge(self):
-
+		self.npop=self.tribus
+        #model
+		assert(self.model in [ 'uniform', 'normal' ]), "Select a valid mutation model: uniform, normal"
+		mutator = np.random.normal
 		if self.model == 'uniform':
-
-			for tr in range(self.tribus):
-				self.tribal_merge=np.vstack([self.tribal_merge,self.sons[tr,0,:]])
-
-			self.tribal_merge = np.delete(self.tribal_merge,(0), axis=0)
-			for tr in range(self.tribus):
-				self.fit_table_merge[tr] = self.function(self.tribal_merge[tr].copy())
-		
-			for steps in range(self.g_m):
-				for j in range(np.int(self.tribus/2)):
-					self.sons_merge[j,:] = self.tribal_merge[self.fit_table_merge.argsort()][j,:]
-				for j in range(np.int(self.tribus/2)):
-					idx_cross_dad = np.random.randint(0,np.int(self.tribus/2),self.n_arg)
-					idx_cross_mom = np.random.randint(0,np.int(self.tribus/2),self.n_arg)
-					for k in range(self.n_arg):
-						self.sons_merge[j+np.int(self.tribus/2),k] = (self.sons_merge[idx_cross_dad[k],k]+self.sons_merge[idx_cross_mom[k],k])/2
-					if(np.random.uniform(0,1)< self.mut_prob):
-						mutidx=np.random.randint(0,int(self.tribus/2))
-						self.sons_merge[j+np.int(self.tribus/2)]=np.random.uniform(self.lb, self.ub, self.n_arg)
-						    						    
-				self.fit_table_merge.sort()
-		
-				for i in range(np.int(self.tribus/2)):
-					self.fit_table_merge[i+np.int(self.tribus/2)] = self.function(self.sons_merge[i+np.int(self.tribus/2),0:int(self.n_arg)].copy())
-
-				self.tribal_merge = self.sons_merge
-		elif self.model == 'normal':
-
-			for tr in range(self.tribus):
-				self.tribal_merge=np.vstack([self.tribal_merge,self.sons[tr,0,:]])
-
-			self.tribal_merge = np.delete(self.tribal_merge,(0), axis=0)
-			for tr in range(self.tribus):
-				self.fit_table_merge[tr] = self.function(self.tribal_merge[tr].copy())
-		
-			for steps in range(self.g_m):
-				for j in range(np.int(self.tribus/2)):
-					self.sons_merge[j,:] = self.tribal_merge[self.fit_table_merge.argsort()][j,:]
-				for j in range(np.int(self.tribus/2)):
-					idx_cross_dad = np.random.randint(0,np.int(self.tribus/2),self.n_arg)
-					idx_cross_mom = np.random.randint(0,np.int(self.tribus/2),self.n_arg)
-					for k in range(self.n_arg):
-						self.sons_merge[j+np.int(self.tribus/2),k] = (self.sons_merge[idx_cross_dad[k],k]+self.sons_merge[idx_cross_mom[k],k])/2
-					if(np.random.uniform(0,1)< self.mut_prob):
-						for i in range(self.n_arg):
-							mutidx=np.random.randint(0,int(self.tribus/2))
-							self.sons_merge[j+np.int(self.tribus/2),i]=np.random.normal(self.sons_merge[mutidx,i],self.width_mut,1)
-						    
-				self.fit_table_merge.sort()
-		
-				for i in range(np.int(self.tribus/2)):
-					self.fit_table_merge[i+np.int(self.tribus/2)] = self.function(self.sons_merge[i+np.int(self.tribus/2),0:int(self.n_arg)].copy())
-
-				self.tribal_merge = self.sons_merge
-
-		else:
-			print('Select a valid model: uniform / normal')
-
-
-		self.sons_merge = self.sons_merge[self.fit_table_merge.argsort()]
-		self.fit_table_merge.sort()
-		
-
+			mutator = np.random.uniform
+        #merging
+		for tr in range(self.tribus):
+			self.tribal_merge=np.vstack([self.tribal_merge,self.sons[tr,0,:]])
+		self.tribal_merge = np.delete(self.tribal_merge,(0), axis=0)
+        #calculating fit table
+		for tr in range(self.tribus):
+			self.fit_table_merge = np.apply_along_axis(self.function, 1, self.tribal_merge.copy())
+        #Evolution
+		for steps in range(self.g_m):
+			self.tribal_merge, self.fit_table_merge = self.evolve_one_step( self.tribal_merge[:], self.fit_table_merge, mutator)
+		self.sons_merge = self.tribal_merge
+            
 	def get_ft(self):
 		return self.fit_table
 
 	def get_sons(self):
 		return self.sons
 
+	def get_adan_eva(self):
+		return self.adan_eva
+
+	def get_tribal_merge(self):
+		return self.tribal_merge
+    
 	def get_sons_merge(self):
 		return self.sons_merge
 
