@@ -1,4 +1,3 @@
-Under construction....
 Genetic algorithm - based Optimizer 
 ==================================
 
